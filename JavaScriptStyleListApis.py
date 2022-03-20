@@ -26,10 +26,10 @@ class JsList (List):
       return prev
     
     def map(self, callback):
-      return self.gen_another_or_not(self.reduce(lambda prev, current, index: [*prev, callback(current)], []))
+      return self.of(self.reduce(lambda prev, current, index: [*prev, callback(current)], []))
     
     def filter(self, callback):
-      return self.gen_another_or_not(
+      return self.of(
         self.reduce(lambda prev, current,*rest:([*prev, current] if bool(callback(current)) else prev ) , [])
       )
 
@@ -39,14 +39,14 @@ class JsList (List):
     def push(self, *args):
       self.append(*args) if len(args) == 1 else self.extend(args)
 
-    def gen_another_or_not (self, target):
+    def of (self, target):
       return JsList(target) if type(target) == list else target
 
     def includes (self, target):
       return self.reduce(lambda prev,current,index,arr,force_stop: (prev and force_stop(prev)) or current == target, False)
     
     def at (self, index: int):
-      return None if (index >= 0 and index >= len(self)) or (index < 0 and -index > len(self)) else self.gen_another_or_not(self[index])
+      return None if (index >= 0 and index >= len(self)) or (index < 0 and -index > len(self)) else self.of(self[index])
 
     def every(self, callback):
       return self.reduce(lambda prev,current,index,arr, stop: stop(False) if not bool(prev) else callback(current, index), True)
@@ -55,12 +55,23 @@ class JsList (List):
       return self.reduce(lambda prev,current,index, arr, stop: stop(True) if bool(prev) else callback(current, index), False)
     
     def slice(self, start:int, end:int):
-      return self.gen_another_or_not(
+      return self.of(
         self[start:end] if (start and end) else self[start:] if start else self[:]
       )
+    
+    def splice(self, start:int, number):
+      result_slice = self[start:start + number] if start + number < len(self) else []
+      del self[start:start + number]
+      return self.of(result_slice)
+
 
     @property
     def length(self):
       return len(self)
 
-l2 = JsList([1,2,3,4,5,6,7,8,9])
+
+l2 = JsList([1,2,3,4,5,56,6,7])
+print(l2)
+
+print(l2.splice(2,5))
+print(l2)
